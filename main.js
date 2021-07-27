@@ -41,7 +41,9 @@ class Game {
             let selected = this.getSelectObjects();
             if (checkObjRight(selected)) {
                 this.generateNextObjects(selected);
-                alert('good job');
+                popupMsg('good job', '#00FF00');
+            } else {
+                popupMsg('No!!!!', '#FF0000');
             }
 
             this.resetSelect();
@@ -77,16 +79,28 @@ class Game {
 }
 
 game = null;
+popups = [];
 
 function setup() {
     createCanvas(WINDOW_WIDTH, WINDOW_HEIGHT);
     game = new Game();
+    popups = [];
+}
+
+function popupMsg(text, color) {
+    popups.push(new Popup(WINDOW_WIDTH / 2, WINDOW_HEIGHT, color, text));
 }
 
 function draw() {
     drawgrid();
     for (var i = 0; i < game.objs.length; i++) {
         game.objs[i].draw();
+    }
+
+    for (var i = 0; i < popups.length; i++) {
+        popups[i].draw();
+        if (popups[i].y <= -100)
+          popups.splice(i, 1);
     }
 }
 
@@ -108,6 +122,7 @@ function mouseClicked(event) {
 function drawgrid() {
     strokeWeight(1);
     fill(255);
+    background(255);
     stroke(0);    
     rect(MARGIN, MARGIN, WINDOW_WIDTH-MARGIN*2, WINDOW_HEIGHT-MARGIN*2);
     for(var x = 0; x < CELL_X_COUNT; x++) {
@@ -155,6 +170,28 @@ function checkObjRight(obj_list) {
 
     return isRight(color_list) && isRight(shape_list) &&
            isRight(filled_list) && isRight(number_list);
+}
+
+const POPUP_SIZE_X = 100
+const POPUP_TEXT_SIZE = 30;
+const POPUP_SPEED = 2;
+
+class Popup {
+    constructor(x, y, color, text) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.text = text;
+    }
+
+    draw() {
+        textAlign(CENTER, CENTER);
+        stroke(color(this.color));
+        textSize(POPUP_TEXT_SIZE);
+        noFill();
+        text(this.text, this.x, this.y);
+        this.y -= POPUP_SPEED;
+    }
 }
 
 class O {
