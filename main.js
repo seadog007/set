@@ -10,30 +10,70 @@ const COLOR_SELECTED = '#00FFFF';
 const SHAPE_SIZE = 20;
 const SEP = 5;
 const SELECTED_WEIGHT = 1
+const SELECT_MAX = 3
 
-objs = [];
+class Game {
+    constructor() {
+        this.objs = [];
+        for (var x = 0; x < CELL_X_COUNT; x++) {
+            for (var y = 0; y < CELL_Y_COUNT; y++) {
+                this.objs.push(new O(x, y, randint(0,2), randint(0,2), randint(0,2), randint(0,2)));
+            }
+        }
+    }
+
+    countSelected() {
+        let select_count = 0;
+        for (var i = 0; i < this.objs.length; i++) {
+            if (this.objs[i].selected)
+                select_count += 1;
+        }
+        
+        return select_count
+    }
+
+    resetSelect() {
+        for (var i = 0; i < this.objs.length; i++) {
+            this.objs[i].selected = false;
+        }
+    }
+
+    checkSelected() {
+        if (this.countSelected() >= SELECT_MAX) {
+            alert('check');
+            this.resetSelect();
+        }
+
+    }
+}
+
+game = null;
 
 function setup() {
     createCanvas(WINDOW_WIDTH, WINDOW_HEIGHT);
-    for (var x = 0; x < CELL_X_COUNT; x++) {
-        for (var y = 0; y < CELL_Y_COUNT; y++) {
-            objs.push(new O(x, y, randint(0,2), randint(0,2), randint(0,2), randint(0,2)));
-        }
-    }
+    game = new Game();
 }
 
 function draw() {
     drawgrid();
-    for(var i = 0; i < objs.length; i++) {
-        objs[i].draw();
+    for (var i = 0; i < game.objs.length; i++) {
+        game.objs[i].draw();
     }
 }
 
 function mouseClicked(event) {
     console.log(event);
-    for(var i = 0; i < objs.length; i++) {
-        objs[i].click(event.offsetX, event.offsetY);
+    for (var i = 0; i < game.objs.length; i++) {
+        obj = game.objs[i]
+
+        // click and return is_selected
+        let is_selected = obj.click(event.offsetX, event.offsetY);
+        if (is_selected && game.countSelected() > SELECT_MAX) {
+            obj.selected = false;
+        }
     }
+
+    game.checkSelected();
 }
 
 function drawgrid() {
