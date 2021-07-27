@@ -89,6 +89,45 @@ function drawgrid() {
     }
 }
 
+function test_isRight() {
+    console.log('test_isRight()');
+    console.assert(isRight([1,2,3]) === true);
+    console.assert(isRight([1,1,1]) === true);
+    console.assert(isRight([2,1,1]) === false);
+}
+
+function isRight(type_list) {
+    console.assert(type_list.length > 1);
+    let set = new Set(type_list);
+
+    // all have same 
+    if (set.size == 1)
+        return true;
+
+    // all have different
+    if (type_list.length == set.size)
+        return true;
+
+    return false
+}
+
+function checkObjRight(obj_list) {
+    let color_list = [];
+    let shape_list = [];
+    let filled_list = [];
+    let number_list = [];
+
+    for (var i = 0; i < obj_list.length; i++) {
+        color_list.push(obj_list[i].color);
+        shape_list.push(obj_list[i].shape);
+        filled_list.push(obj_list[i].filled);
+        number_list.push(obj_list[i].number);
+    }
+
+    return isRight(color_list) && isRight(shape_list) &&
+           isRight(filled_list) && isRight(number_list);
+}
+
 class O {
     constructor(x, y, color, shape, filled, number) {
         this.x = x;
