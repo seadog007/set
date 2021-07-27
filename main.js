@@ -276,6 +276,43 @@ class O {
     }
 }
 
+function dfs(deep, obj_list, selected) {
+    // base case
+    if (deep == 0) {
+        return checkObjRight(selected);
+    } else {
+        for (var i = 0; i < obj_list.length; i++) {
+            var obj = obj_list[i];
+            if (selected.includes(obj))
+                continue;
+
+            selected.push(obj);
+            if (dfs(deep - 1, obj_list, selected))
+                return true;
+            else
+                selected.pop();
+        }
+    }
+
+    return false;
+}
+
+function solve() {
+    var start = new Date().getTime();
+    var selected = [];
+    if (dfs(SELECT_MAX, game.objs, selected)) {
+        console.log(selected);
+        for (var i = 0; i < selected.length; i++) {
+            console.log(selected[i].x, selected[i].y);
+        }
+    } else {
+        popupMsg('No solve', '#FF0000');
+    }
+    
+    var end = new Date().getTime();
+    console.log((end - start) + "ms");
+}
+
 function randint(a, b) {
     return Math.floor(Math.random() * (b - a + 1)) + a;
 }
