@@ -17,19 +17,17 @@ class Game {
         this.objs = [];
         for (var x = 0; x < CELL_X_COUNT; x++) {
             for (var y = 0; y < CELL_Y_COUNT; y++) {
-                this.objs.push(new O(x, y, randint(0,2), randint(0,2), randint(0,2), randint(0,2)));
+                this.objs.push(this.newObject(x, y));
             }
         }
     }
 
+    newObject(x, y) {
+        return new O(x, y, randint(0,2), randint(0,2), randint(0,2), randint(0,2));
+    }
+
     countSelected() {
-        let select_count = 0;
-        for (var i = 0; i < this.objs.length; i++) {
-            if (this.objs[i].selected)
-                select_count += 1;
-        }
-        
-        return select_count
+        return this.getSelectObjects().length;
     }
 
     resetSelect() {
@@ -40,10 +38,41 @@ class Game {
 
     checkSelected() {
         if (this.countSelected() >= SELECT_MAX) {
-            alert('check');
+            let selected = this.getSelectObjects();
+            if (checkObjRight(selected)) {
+                this.generateNextObjects(selected);
+                alert('good job');
+            }
+
             this.resetSelect();
         }
 
+    }
+
+    getSelectObjects() {
+        let result = []
+        for (var i = 0; i < this.objs.length; i++) {
+            if (this.objs[i].selected)
+                result.push(this.objs[i]);
+        }
+        
+        return result;
+    }
+
+    generateNextObjects(old_objs_list) {
+        // remove same referecne
+        for (var i = 0; i < old_objs_list.length; i++) {
+            var index = this.objs.indexOf(old_objs_list[i]);
+            if (index > -1) {
+                this.objs.splice(index, 1);
+            }
+        }
+
+        // gen new objects
+        for (var i = 0; i < old_objs_list.length; i++) {
+            obj = old_objs_list[i];
+            this.objs.push(this.newObject(obj.x, obj.y));
+        }
     }
 }
 
