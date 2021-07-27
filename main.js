@@ -17,19 +17,17 @@ class Game {
         this.objs = [];
         for (var x = 0; x < CELL_X_COUNT; x++) {
             for (var y = 0; y < CELL_Y_COUNT; y++) {
-                this.objs.push(new O(x, y, randint(0,2), randint(0,2), randint(0,2), randint(0,2)));
+                this.objs.push(this.newObject(x, y));
             }
         }
     }
 
+    newObject(x, y) {
+        return new O(x, y, randint(0,2), randint(0,2), randint(0,2), randint(0,2));
+    }
+
     countSelected() {
-        let select_count = 0;
-        for (var i = 0; i < this.objs.length; i++) {
-            if (this.objs[i].selected)
-                select_count += 1;
-        }
-        
-        return select_count
+        return this.getSelectObjects().length;
     }
 
     resetSelect() {
@@ -40,24 +38,69 @@ class Game {
 
     checkSelected() {
         if (this.countSelected() >= SELECT_MAX) {
-            alert('check');
+            let selected = this.getSelectObjects();
+            if (checkObjRight(selected)) {
+                this.generateNextObjects(selected);
+                popupMsg('good job', '#00FF00');
+            } else {
+                popupMsg('No!!!!', '#FF0000');
+            }
+
             this.resetSelect();
         }
 
     }
+
+    getSelectObjects() {
+        let result = []
+        for (var i = 0; i < this.objs.length; i++) {
+            if (this.objs[i].selected)
+                result.push(this.objs[i]);
+        }
+        
+        return result;
+    }
+
+    generateNextObjects(old_objs_list) {
+        // remove same referecne
+        for (var i = 0; i < old_objs_list.length; i++) {
+            var index = this.objs.indexOf(old_objs_list[i]);
+            if (index > -1) {
+                this.objs.splice(index, 1);
+            }
+        }
+
+        // gen new objects
+        for (var i = 0; i < old_objs_list.length; i++) {
+            obj = old_objs_list[i];
+            this.objs.push(this.newObject(obj.x, obj.y));
+        }
+    }
 }
 
 game = null;
+popups = [];
 
 function setup() {
     createCanvas(WINDOW_WIDTH, WINDOW_HEIGHT);
     game = new Game();
+    popups = [];
+}
+
+function popupMsg(text, color) {
+    popups.push(new Popup(WINDOW_WIDTH / 2, WINDOW_HEIGHT, color, text));
 }
 
 function draw() {
     drawgrid();
     for (var i = 0; i < game.objs.length; i++) {
         game.objs[i].draw();
+    }
+
+    for (var i = 0; i < popups.length; i++) {
+        popups[i].draw();
+        if (popups[i].y <= -100)
+          popups.splice(i, 1);
     }
 }
 
@@ -79,6 +122,7 @@ function mouseClicked(event) {
 function drawgrid() {
     strokeWeight(1);
     fill(255);
+    background(255);
     stroke(0);    
     rect(MARGIN, MARGIN, WINDOW_WIDTH-MARGIN*2, WINDOW_HEIGHT-MARGIN*2);
     for(var x = 0; x < CELL_X_COUNT; x++) {
@@ -86,6 +130,67 @@ function drawgrid() {
     }
     for(var y = 0; y < CELL_Y_COUNT; y++) {
         line(MARGIN, MARGIN + y * CELL_SIZE_Y, WINDOW_WIDTH-MARGIN, MARGIN + y * CELL_SIZE_Y);
+    }
+}
+
+function test_isRight() {
+    console.log('test_isRight()');
+    console.assert(isRight([1,2,3]) === true);
+    console.assert(isRight([1,1,1]) === true);
+    console.assert(isRight([2,1,1]) === false);
+}
+
+function isRight(type_list) {
+    console.assert(type_list.length > 1);
+    let set = new Set(type_list);
+
+    // all have same 
+    if (set.size == 1)
+        return true;
+
+    // all have different
+    if (type_list.length == set.size)
+        return true;
+
+    return false
+}
+
+function checkObjRight(obj_list) {
+    let color_list = [];
+    let shape_list = [];
+    let filled_list = [];
+    let number_list = [];
+
+    for (var i = 0; i < obj_list.length; i++) {
+        color_list.push(obj_list[i].color);
+        shape_list.push(obj_list[i].shape);
+        filled_list.push(obj_list[i].filled);
+        number_list.push(obj_list[i].number);
+    }
+
+    return isRight(color_list) && isRight(shape_list) &&
+           isRight(filled_list) && isRight(number_list);
+}
+
+const POPUP_SIZE_X = 100
+const POPUP_TEXT_SIZE = 30;
+const POPUP_SPEED = 2;
+
+class Popup {
+    constructor(x, y, color, text) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.text = text;
+    }
+
+    draw() {
+        textAlign(CENTER, CENTER);
+        stroke(color(this.color));
+        textSize(POPUP_TEXT_SIZE);
+        noFill();
+        text(this.text, this.x, this.y);
+        this.y -= POPUP_SPEED;
     }
 }
 
@@ -169,6 +274,43 @@ class O {
         }
         
     }
+}
+
+function dfs(deep, obj_list, selected) {
+    // base case
+    if (deep == 0) {
+        return checkObjRight(selected);
+    } else {
+        for (var i = 0; i < obj_list.length; i++) {
+            var obj = obj_list[i];
+            if (selected.includes(obj))
+                continue;
+
+            selected.push(obj);
+            if (dfs(deep - 1, obj_list, selected))
+                return true;
+            else
+                selected.pop();
+        }
+    }
+
+    return false;
+}
+
+function solve() {
+    var start = new Date().getTime();
+    var selected = [];
+    if (dfs(SELECT_MAX, game.objs, selected)) {
+        console.log(selected);
+        for (var i = 0; i < selected.length; i++) {
+            console.log(selected[i].x, selected[i].y);
+        }
+    } else {
+        popupMsg('No solve', '#FF0000');
+    }
+    
+    var end = new Date().getTime();
+    console.log((end - start) + "ms");
 }
 
 function randint(a, b) {
